@@ -1,35 +1,34 @@
 # Author::    Mohammad A. Ali  (mailto:oldmoe@gmail.com)
 # Copyright:: Copyright (c) 2008 eSpace, Inc.
 # License::   Distributes under the same terms as Ruby
-#
-# This class represents a pool of connections, 
-# you hold or release conncetions from the pool
-# hold requests that cannot be fullfiled will be queued
-# the fiber will be paused and resumed later when
-# a connection is avaialble
-#
-# Large portions of this class were copied and pasted
-# form Sequel's threaded connection pool
-#
-# Example:
-#
-# pool = NeverBlock::Pool::FiberedConnectionPool.new(:size=>16)do
-#   # connection creation code goes here   
-# end
-# 32.times do
-#   Fiber.new do
-#     conn = pool.hold # hold will pause the fiber until a connection is available
-#     conn.execute('something') # you can use the connection normally now 
-#   end.resume
-# end
-# 
-# The pool has support for transactions, just pass true to the pool#hold method
-# and the connection will not be released after the block is finished
-# It is the responsibility of client code to release the connection
 
 module NeverBlock
   module Pool
-    
+		# This class represents a pool of connections, 
+		# you hold or release conncetions from the pool
+		# hold requests that cannot be fullfiled will be queued
+		# the fiber will be paused and resumed later when
+		# a connection is avaialble
+		#
+		# Large portions of this class were copied and pasted
+		# form Sequel's threaded connection pool
+    #
+		# Example:
+		#
+		#   pool = NeverBlock::Pool::FiberedConnectionPool.new(:size=>16) do
+		#     #connection creation code goes here   
+		#   end
+		#
+		#   32.times do
+		#     Fiber.new do
+		#       conn = pool.hold # hold will pause the fiber until a connection is available
+		#       conn.execute('something') # you can use the connection normally now 
+		#     en d.resume
+		#   end
+		# 
+		# The pool has support for transactions, just pass true to the pool#hold method
+		# and the connection will not be released after the block is finished
+		# It is the responsibility of client code to release the connection    
 		class FiberedConnectionPool
 			
 			# a connection proc can be supplied

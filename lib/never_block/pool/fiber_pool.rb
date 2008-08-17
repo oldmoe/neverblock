@@ -1,28 +1,28 @@
 # Author::    Mohammad A. Ali  (mailto:oldmoe@gmail.com)
 # Copyright:: Copyright (c) 2008 eSpace, Inc.
 # License::   Distributes under the same terms as Ruby
-#
-#	A pool of initialized fibers
-#	It does not grow in size or create transient fibers
-#	It will queue code blocks when needed (if all its fibers are busy)
-#
-# This class is particulary useful when you use the fibers 
-# to connect to evented back ends. It also does not generate
-# transient objects and thus saves memory.
-# 
-# Example:
-# fiber_pool = NeverBlock::Pool::FiberPool.new(150)
-# 
-# loop do
-#   fiber_pool.spawn do
-#     #fiber body goes here 
-#   end
-# end
 
 require 'fiber'
 
 module NeverBlock
   module Pool
+    # A pool of initialized fibers
+    # It does not grow in size or create transient fibers
+    # It will queue code blocks when needed (if all its fibers are busy)
+    #
+    # This class is particulary useful when you use the fibers 
+    # to connect to evented back ends. It also does not generate
+    # transient objects and thus saves memory.
+    #
+    # Example:
+    # 
+    #   fiber_pool = NeverBlock::Pool::FiberPool.new(150)
+    #   loop do
+    #     fiber_pool.spawn do
+    #       #fiber body goes here 
+    #     end
+    #   end
+    #
 	  class FiberPool
 		  attr_accessor :fibers
 
