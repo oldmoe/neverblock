@@ -45,7 +45,7 @@ module NeverBlock
 						  end
 					  end
 				  end
-				  fiber[:evented] = true
+				  fiber[:neverblock] = true
 				  @fibers << fiber
 			  end 
 		  end
