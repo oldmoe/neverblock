@@ -17,6 +17,7 @@ Gem::Specification.new do |s|
 		"lib/never_block/pool/fiber_pool.rb", 
 		"lib/never_block/pool/fibered_connection_pool.rb",
     "lib/never_block/frameworks/rails.rb",
+    "lib/never_block/frameworks/activerecord.rb",
     "lib/never_block/servers/thin.rb"]
   s.rdoc_options = ["--main", "README"]
   s.extra_rdoc_files = ["README"]
