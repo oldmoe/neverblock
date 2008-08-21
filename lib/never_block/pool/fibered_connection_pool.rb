@@ -1,18 +1,22 @@
-module NeverBlock  
+# Author::    Mohammad A. Ali  (mailto:oldmoe@gmail.com)
+# Copyright:: Copyright (c) 2008 eSpace, Inc.
+# License::   Distributes under the same terms as Ruby
+
+module NeverBlock
   module Pool
     
     # Author::    Mohammad A. Ali  (mailto:oldmoe@gmail.com)
     # Copyright:: Copyright (c) 2008 eSpace, Inc.
     # License::   Distributes under the same terms as Ruby
     #
-    # This class represents a pool of connections, 
-    # you hold or release conncetions from the pool
-    # hold requests that cannot be fullfiled will be queued
-    # the fiber will be paused and resumed later when
-    # a connection is avaialble
-    #
-    # Large portions of this class were copied and pasted
-    # form Sequel's threaded connection pool
+		# This class represents a pool of connections, 
+		# you hold or release conncetions from the pool
+		# hold requests that cannot be fullfiled will be queued
+		# the fiber will be paused and resumed later when
+		# a connection is avaialble
+		#
+		# Large portions of this class were copied and pasted
+		# form Sequel's threaded connection pool
     #
     # Example:
     #

@@ -1,6 +1,10 @@
 # we need Fiber.current
 # so we must require
 # fiber
+# Author::    Mohammad A. Ali  (mailto:oldmoe@gmail.com)
+# Copyright:: Copyright (c) 2008 eSpace, Inc.
+# License::   Distributes under the same terms as Ruby
+
 require 'fiber'
 
 module NeverBlock
@@ -17,7 +21,7 @@ module NeverBlock
     # This class is particulary useful when you use the fibers 
     # to connect to evented back ends. It also does not generate
     # transient objects and thus saves memory.
-    # 
+    #
     # Example:
     # fiber_pool = NeverBlock::Pool::FiberPool.new(150)
     # 
@@ -26,6 +30,7 @@ module NeverBlock
     #     #fiber body goes here 
     #   end
     # end
+    #
 	  class FiberPool
 
 	    # gives access to the currently free fibers
@@ -50,7 +55,7 @@ module NeverBlock
 						  end
 					  end
 				  end
-				  fiber[:evented] = true
+				  fiber[:neverblock] = true
 				  @fibers << fiber
 			  end 
 		  end
