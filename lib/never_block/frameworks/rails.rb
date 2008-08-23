@@ -1,4 +1,5 @@
-require 'actionpack'
+#require 'actionpack'
+require 'action_controller'
 
 # Rails tries to protect dispatched actions
 # by wrapping them in a synchronized code

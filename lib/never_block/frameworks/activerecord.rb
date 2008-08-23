@@ -1,4 +1,3 @@
-require 'never_block/frameworks/rails'
 require 'activerecord'
 
 # Patch ActiveRecord to store transaction depth information

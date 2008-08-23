@@ -31,4 +31,16 @@ module Thin
     
   end # Connection
 
+  module Backends
+    class Base
+      def config
+        # EM.epoll
+        # Set the maximum number of socket descriptors that the server may open.
+        # The process needs to have required privilege to set it higher the 1024 on
+        # some systems.
+        @maximum_connections = EventMachine.set_descriptor_table_size(@maximum_connections) unless Thin.win?
+      end
+    end
+  end # Backends
+
 end # Thin
