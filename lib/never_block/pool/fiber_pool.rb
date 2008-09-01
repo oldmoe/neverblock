@@ -5,7 +5,7 @@
 # Copyright:: Copyright (c) 2008 eSpace, Inc.
 # License::   Distributes under the same terms as Ruby
 
-require 'fiber'
+#require 'fiber'
 
 module NeverBlock
   module Pool

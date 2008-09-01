@@ -4,10 +4,9 @@
 
 $:.unshift File.expand_path(File.dirname(__FILE__))
 
-begin
-  require 'fiber'
-rescue
-  require 'thread' 
+unless defined? Fiber
+  require 'thread'
+  require 'singleton'
   class FiberError < StandardError; end
   class Fiber
     def initialize
@@ -15,7 +14,7 @@ rescue
  
       @yield = Queue.new
       @resume = Queue.new
- 
+
       @thread = Thread.new{ @yield.push [ *yield(*@resume.pop) ] }
       @thread.abort_on_exception = true
       @thread[:fiber] = self
@@ -47,7 +46,24 @@ rescue
     def inspect
       "#<#{self.class}:0x#{self.object_id.to_s(16)}>"
     end
-  end  
+  end
+
+  class RootFiber < Fiber
+    include Singleton
+    def initialize
+    end
+
+    def resume *args
+      raise FiberError, "can't resume root fiber"
+    end
+
+    def yield *args
+      raise FiberError, "can't yield from root fiber"
+    end
+  end
+
+  #attach the root fiber to the main thread
+  Thread.main[:fiber] = RootFiber.instance
 end
 
 require 'never_block/extensions/fiber_extensions'
