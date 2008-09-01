@@ -3,7 +3,14 @@ require 'activerecord'
 # Patch ActiveRecord to store transaction depth information
 # in fibers instead of threads. AR does not support nested
 # transactions which makes the job easy.
+# We also need to override the scoped methods to store
+# the scope in the fiber context
 class ActiveRecord::Base
+
+  def single_threaded_scoped_methods #:nodoc:
+    scoped_methods = (Fiber.current[:scoped_methods] ||= {})
+    scoped_methods[self] ||= []
+  end
 
   def self.transaction(&block)
     increment_open_transactions
