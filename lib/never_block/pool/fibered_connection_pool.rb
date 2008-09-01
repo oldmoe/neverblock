@@ -78,7 +78,11 @@ module NeverBlock
 				@busy_connections.delete(fiber)
 				@connections << conn
 			end
-      
+
+      def all_connections
+        (@connections + @busy_connections.values).each {|conn| yield(conn)}
+      end
+
       private
 
       # Can we find a connection?

@@ -64,7 +64,7 @@ module NeverBlock
 		  # use it, otherwise, leave it to linger in a queue
 		  def spawn(evented = true, &block)
 			  if fiber = @fibers.shift
-			    fiber[:evented] = evented
+			    fiber[:neverblock] = evented
 				  fiber.resume(block)
 			  else
 				  @queue << block
