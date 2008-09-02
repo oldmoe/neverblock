@@ -64,6 +64,8 @@ unless defined? Fiber
 
   #attach the root fiber to the main thread
   Thread.main[:fiber] = RootFiber.instance
+else
+  require 'fiber'
 end
 
 require 'never_block/extensions/fiber_extensions'
