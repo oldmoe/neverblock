@@ -1,3 +1,5 @@
+require 'rubygems' 
+require 'neverblock'
 require 'thin'
 
 module Thin
