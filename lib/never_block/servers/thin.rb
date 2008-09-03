@@ -1,3 +1,4 @@
+require 'neverblock' unless defined?(NeverBlock)
 require 'thin'
 
 module Thin
@@ -8,7 +9,7 @@ module Thin
   # in fibers
   class Server
 
-    DEFAULT_FIBER_POOL_SIZE = 50
+    DEFAULT_FIBER_POOL_SIZE = 20
 
     def fiber_pool
       @fiber_pool ||= NB::Pool::FiberPool.new(DEFAULT_FIBER_POOL_SIZE)

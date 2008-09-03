@@ -2,7 +2,7 @@ require 'rubygems'
 require 'neverblock'
 require 'neverblock-pg'
 
-$fpool = NB::Pool::FiberPool.new(24)
+$fpool = NB::Pool::FiberPool.new(50)
 
 $long_count = ARGV[0].to_i
 $freq = ARGV[1].to_i
