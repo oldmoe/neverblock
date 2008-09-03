@@ -46,11 +46,11 @@ module NeverBlock
       def register_with_event_loop(loop)
         if loop == :em
           unless EM.respond_to?(:attach)
-            puts "invalide EM version, please download the modified gem from: (TBA) "
+            puts "invalide EM version, please download the modified gem from: (http://github.com/riham/eventmachine)"
             exit
           end
           if EM.reactor_running?
-            EM::attach(@io,EMConnectionHandler,self)
+            @em_connection = EM::attach(@io,EMConnectionHandler,self)
           else
             raise "REACTOR NOT RUNNING YA ZALAMA"
           end 
@@ -59,7 +59,17 @@ module NeverBlock
         else
           raise "could not register with the event loop"
         end
+        @loop = loop
       end  
+
+      # Unattaches the connection socket from the event loop
+      def unregister_from_event_loop
+        if @loop == :em
+          @em_connection.unattach(false)
+        else
+          raise NotImplementedError.new("unregister_from_event_loop not implemented for #{@loop}")
+        end
+      end
 
       # The callback, this is called whenever
       # there is data available at the socket

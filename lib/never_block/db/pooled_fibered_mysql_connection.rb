@@ -48,6 +48,14 @@ module NeverBlock
           @pool.release(Fiber.current,conn)
         end
       end
+
+      #close all connections and remove them from the event loop
+      def close
+        @pool.all_connections do |conn|
+          conn.unregister_from_event_loop
+          conn.close
+        end
+      end
       
       # Pass unknown methods to the connection
       def method_missing(method, *args)

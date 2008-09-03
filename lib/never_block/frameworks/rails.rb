@@ -1,5 +1,6 @@
+require 'neverblock' unless defined?(NeverBlock)
 #require 'actionpack'
-require 'action_controller'
+#require 'action_controller'
 
 # Rails tries to protect dispatched actions
 # by wrapping them in a synchronized code
@@ -8,6 +9,8 @@ require 'action_controller'
 # transform it (without it knowing) to
 # something more subtle
 
+
+=begin
 class ActionController::Dispatcher
 
   # let's show this guard who is
@@ -16,6 +19,18 @@ class ActionController::Dispatcher
 
   # now you synchronize
   def @@guard.synchronize(&block)
+    # now you don't!
+    block.call
+  end
+end
+=end
+
+
+require 'thread'
+
+# now you synchronize
+class Mutex
+  def synchronize(&block)
     # now you don't!
     block.call
   end

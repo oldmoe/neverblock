@@ -1,5 +1,5 @@
 require 'rubygems' 
-require 'neverblock'
+require 'neverblock' unless defined?(NeverBlock)
 require 'thin'
 
 module Thin
@@ -10,7 +10,7 @@ module Thin
   # in fibers
   class Server
 
-    DEFAULT_FIBER_POOL_SIZE = 50
+    DEFAULT_FIBER_POOL_SIZE = 20
 
     def fiber_pool
       @fiber_pool ||= NB::Pool::FiberPool.new(DEFAULT_FIBER_POOL_SIZE)
@@ -33,16 +33,5 @@ module Thin
     
   end # Connection
 
-  module Backends
-    class Base
-      def config
-        # EM.epoll
-        # Set the maximum number of socket descriptors that the server may open.
-        # The process needs to have required privilege to set it higher the 1024 on
-        # some systems.
-        @maximum_connections = EventMachine.set_descriptor_table_size(@maximum_connections) unless Thin.win?
-      end
-    end
-  end # Backends
 
 end # Thin

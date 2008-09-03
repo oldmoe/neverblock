@@ -64,7 +64,14 @@ class ActiveRecord::ConnectionAdapters::NeverBlockPostgreSQLAdapter < ActiveReco
 
         configure_connection
         @connection.commit_db_transaction
-      end  
+      end
+
+      # Close then reopen the connection.
+      def reconnect!
+        disconnect!
+        connect
+      end
+
 end
 
 class ActiveRecord::Base
