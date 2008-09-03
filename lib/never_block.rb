@@ -73,6 +73,12 @@ require 'never_block/pool/fiber_pool'
 require 'never_block/pool/fibered_connection_pool'
 
 module NeverBlock
+  def self.neverblock(nb = true, &block)
+    status = Fiber.current[:neverblock]
+    Fiber.current[:neverblock] = nb
+    block.call
+    Fiber.current[:neverblock] = status
+  end
 end
 
 NB = NeverBlock
