@@ -1,4 +1,4 @@
-require 'rubygems' 
+require 'rubygems'
 require 'neverblock' unless defined?(NeverBlock)
 require 'thin'
 

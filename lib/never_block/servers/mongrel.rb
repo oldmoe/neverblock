@@ -17,7 +17,7 @@ rescue LoadError
 	end
 end
 
-require 'rubygems' 
+require 'rubygems'
 require 'neverblock'
 require 'mongrel'
 
@@ -86,7 +86,7 @@ module Mongrel
 	end
 
 	class HttpServer
-    DEFAULT_FIBER_POOL_SIZE = 20	  
+    DEFAULT_FIBER_POOL_SIZE = 20
 		def initialize(host, port, num_processors=950, x=0, y=nil) # Deal with Mongrel 1.0.1 or earlier, as well as later.
 			@socket = nil
 			@classifier = URIClassifier.new
@@ -107,7 +107,7 @@ module Mongrel
     def fiber_pool
       @fiber_pool ||= NB::Pool::FiberPool.new(DEFAULT_FIBER_POOL_SIZE)
     end
-    
+
 		def run
 			trap('INT') { raise StopServer }
 			trap('TERM') { raise StopServer }
@@ -130,7 +130,7 @@ module Mongrel
 				params[Const::REQUEST_PATH] = uri.request_uri
 			end
 
- 			raise "No REQUEST PATH" if not params[Const::REQUEST_PATH]
+      raise "No REQUEST PATH" if not params[Const::REQUEST_PATH]
 
 			script_name, path_info, handlers = @classifier.resolve(params[Const::REQUEST_PATH])
 
@@ -157,7 +157,7 @@ module Mongrel
 				client.close_connection_after_writing
 			end
 		end
-		
+
 		def dispatch_to_handlers(handlers,request,response)
 			handlers.each do |handler|
 				handler.process(request, response)
@@ -209,7 +209,7 @@ module Mongrel
 			@socket.close_connection_after_writing
 		end
 	end
-	
+
 	class Configurator
 		# This version fixes a bug in the regular Mongrel version by adding
 		# initialization of groups.
@@ -218,12 +218,12 @@ module Mongrel
 				log "Initializing groups for {#user}:{#group}."
 				Process.initgroups(user,Etc.getgrnam(group).gid)
 			end
-			
+
 			if group
 				log "Changing group to #{group}."
 				Process::GID.change_privilege(Etc.getgrnam(group).gid)
 			end
-			
+
 			if user
 				log "Changing user to #{user}."
 				Process::UID.change_privilege(Etc.getpwnam(user).uid)

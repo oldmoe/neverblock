@@ -22,7 +22,7 @@ module NeverBlock
         super(*args)
         @fd = socket
         @io = IO.new(socket)
-        setnonblocking(true)	
+        #setnonblocking(true)
       end
         
       # Assuming the use of NeverBlock fiber extensions and that the exec is run in
@@ -76,7 +76,7 @@ module NeverBlock
       def process_command
         # make sure all commands are sent
         # before attempting to read
-        return unless self.flush
+        #return unless self.flush
         self.consume_input
         unless is_busy		
           res, data = 0, []

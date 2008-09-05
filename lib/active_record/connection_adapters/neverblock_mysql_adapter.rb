@@ -45,11 +45,13 @@ class ActiveRecord::ConnectionAdapters::NeverBlockMysqlAdapter < ActiveRecord::C
       end
       conn.ssl_set(@config[:sslkey], @config[:sslcert], @config[:sslca], @config[:sslcapath], @config[:sslcipher]) if @config[:sslkey]
       conn.real_connect(*@connection_options)
+      NB.neverblock(false) do
+        conn.query("SET NAMES '#{encoding}'") if encoding
+        # By default, MySQL 'where id is null' selects the last inserted id.
+        # Turn this off. http://dev.rubyonrails.org/ticket/6778
+        conn.query("SET SQL_AUTO_IS_NULL=0")
+      end
       conn.register_with_event_loop(:em)
-      conn.query("SET NAMES '#{encoding}'") if encoding
-      # By default, MySQL 'where id is null' selects the last inserted id.
-      # Turn this off. http://dev.rubyonrails.org/ticket/6778
-      conn.query("SET SQL_AUTO_IS_NULL=0")
       conn          
     end
   end  
