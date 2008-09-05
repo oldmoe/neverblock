@@ -14,29 +14,28 @@ module NeverBlock
         end
       end
       
-      # A proxy for the connection's exec method
+      # A proxy for the connection's query method
       # quries the pool to get a connection first
-      def exec(query)
+      def query(query)
         @pool.hold do |conn|
           conn.query(query)
         end
       end
       
-      alias :query :exec
       # This method must be called for transactions to work correctly.
       # One cannot just send "begin" as you never know which connection
       # will be available next. This method ensures you get the same connection
       # while in a transaction.
       def begin_db_transaction
         @pool.hold(true) do |conn|
-          conn.exec("begin")
+          conn.query("begin")
         end
       end
       
       # see =begin_db_transaction
       def rollback_db_transaction
         @pool.hold do |conn|
-          conn.exec("rollback")
+          conn.query("rollback")
           @pool.release(Fiber.current,conn)
         end
       end
@@ -44,7 +43,7 @@ module NeverBlock
       # see =begin_db_transaction
       def commit_db_transaction
         @pool.hold do |conn|
-          conn.exec("commit")
+          conn.query("commit")
           @pool.release(Fiber.current,conn)
         end
       end
