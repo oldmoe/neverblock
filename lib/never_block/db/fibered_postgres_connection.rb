@@ -20,23 +20,51 @@ module NeverBlock
       # object.
 	    def initialize(*args)
         super(*args)
-        @fd = socket
-        @io = IO.new(socket)
+        init_descriptor
         #setnonblocking(true)
       end
-        
+      
+      def init_descriptor
+        @fd = socket
+        @io = IO.new(socket)
+      end  
       # Assuming the use of NeverBlock fiber extensions and that the exec is run in
       # the context of a fiber. One that have the value :neverblock set to true.
       # All neverblock IO classes check this value, setting it to false will force
       # the execution in a blocking way.
       def exec(sql)
-        if Fiber.respond_to? :current and Fiber.current[:neverblock]		      
-          self.send_query sql
-          @fiber = Fiber.current		      
-          Fiber.yield 
-        else		      
-          super(sql)
+        begin
+          if Fiber.respond_to? :current and Fiber.current[:neverblock]		      
+            send_query sql
+            @fiber = Fiber.current		      
+            Fiber.yield 
+            while is_busy
+              consume_input
+              Fiber.yield if is_busy
+            end
+            res, data = 0, []
+            while res != nil
+              res = self.get_result
+              data << res unless res.nil?
+            end
+            data.last          
+          else		      
+            super(sql)
+          end
+        rescue Exception => e
+          reset if e.msg.include? "not connected"
+          raise e
         end		
+      end
+
+      # reset the connection
+      # and reattach to the
+      # event loop
+      def reset
+        unregister_from_event_loop
+        super
+        init_descriptor
+        register_with_event_loop(@loop)    
       end
       
       # Attaches the connection socket to an event loop.
@@ -73,20 +101,9 @@ module NeverBlock
 
       # The callback, this is called whenever
       # there is data available at the socket
-      def process_command
-        # make sure all commands are sent
-        # before attempting to read
-        #return unless self.flush
-        self.consume_input
-        unless is_busy		
-          res, data = 0, []
-          while res != nil
-            res = self.get_result
-            data << res unless res.nil?
-          end
-          #let the fiber continue its work		      
-          @fiber.resume(data.last)
-        end
+      def resume_command
+        #let the fiber continue its work		      
+        @fiber.resume
       end
       
     end #FiberedPostgresConnection 
@@ -98,7 +115,7 @@ module NeverBlock
         @connection = connection
       end
       def notify_readable
-        @connection.process_command
+        @connection.resume_command
       end
     end
 

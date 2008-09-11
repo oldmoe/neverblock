@@ -2,12 +2,16 @@ require 'rubygems'
 require 'neverblock'
 require 'neverblock-mysql'
 
-@count = 10
+class Mysql
+  attr_accessor :fiber
+end
+
+@count = 100
 @connections = {}
 @fpool = NB::Pool::FiberPool.new(@count)
 @cpool = NB::Pool::FiberedConnectionPool.new(size:@count, eager:true) do
-   c = Mysql.real_connect('localhost','root',nil)
-   @connections[IO.new(c.socket)] = c
+   c = NB::DB::FiberedMysqlConnection.real_connect('localhost','root',nil)
+   @connections[c.io] = c
    c
 end
 
@@ -15,9 +19,9 @@ end
 @done = 0
 @t = Time.now
 @count.times do
-  @fpool.spawn(false) do
+  @fpool.spawn do
     @cpool.hold do |conn|
-      conn.query('select sleep(1)').each{|r| r}
+      conn.query('select sleep(1) as sleep').each{|r|p r}
       @done = @done + 1
       puts "done in #{Time.now - @t}" if @done == @count
     end
@@ -27,6 +31,6 @@ end
 loop do
   res = select(@sockets,nil,nil,nil)
   if res
-    res.first.each{|c|@connections[c].process_command}
+    res.first.each{|s|@connections[s].resume_command}
   end
 end

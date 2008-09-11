@@ -97,6 +97,6 @@ print "finished evented queries in : "
 run_evented
 loop do
 	res = select($sockets,nil,nil,nil)
-	res.first.each{ |s|$connections[s].process_command } if res
+	res.first.each{ |s|$connections[s].resume_command } if res
 	break if $done
 end

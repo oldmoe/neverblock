@@ -1,4 +1,4 @@
-require 'mysql'
+require 'mysqlplus'
 
 module NeverBlock
 
@@ -18,26 +18,47 @@ module NeverBlock
       # Creates a new mysql connection, sets it
       # to nonblocking and wraps the descriptor in an IO
       # object.
-	    def real_connect(*args)
-        super(*args)
-        @fd = socket
-        @io = IO.new(socket)
+	    def self.real_connect(*args)
+        me = super(*args)
+        me.init_descriptor
+        me
       end
       #alias :real_connect :initialize
       #alias :connect :initialize
+      
+      def init_descriptor
+        @fd = socket
+        @io = IO.new(socket)
+      end
         
       # Assuming the use of NeverBlock fiber extensions and that the exec is run in
       # the context of a fiber. One that have the value :neverblock set to true.
       # All neverblock IO classes check this value, setting it to false will force
       # the execution in a blocking way.
       def query(sql)
-        if Fiber.respond_to? :current and Fiber.current[:neverblock]		      
-          send_query sql
-          @fiber = Fiber.current		      
-          Fiber.yield 
-        else		      
-          super(sql)
+        begin
+          if Fiber.respond_to? :current and Fiber.current[:neverblock]		      
+            send_query sql
+            @fiber = Fiber.current		      
+            Fiber.yield
+            get_result 
+          else		      
+            super(sql)
+          end
+        rescue Exception => e
+          reconnect if e.msg.include? "not connected"
+          raise e
         end		
+      end
+
+      # reset the connection
+      # and reattach to the
+      # event loop
+      def reconnect
+        unregister_from_event_loop
+        super
+        init_descriptor
+        register_with_event_loop(@loop)    
       end
       
       # Attaches the connection socket to an event loop.
@@ -73,8 +94,8 @@ module NeverBlock
 
       # The callback, this is called whenever
       # there is data available at the socket
-      def process_command
-        @fiber.resume get_result
+      def resume_command
+        @fiber.resume
       end
       
     end #FiberedPostgresConnection 
@@ -86,7 +107,7 @@ module NeverBlock
         @connection = connection
       end
       def notify_readable
-        @connection.process_command
+        @connection.resume_command
       end
     end
 
