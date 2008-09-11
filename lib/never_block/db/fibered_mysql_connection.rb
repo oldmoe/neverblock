@@ -46,7 +46,7 @@ module NeverBlock
             super(sql)
           end
         rescue Exception => e
-          reconnect if e.msg.include? "not connected"
+          reconnect if e.message.include? "not connected"
           raise e
         end		
       end
