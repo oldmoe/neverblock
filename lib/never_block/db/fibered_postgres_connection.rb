@@ -52,7 +52,7 @@ module NeverBlock
             super(sql)
           end
         rescue Exception => e
-          reset if e.msg.include? "not connected"
+          reset if e.message.include? "not connected"
           raise e
         end		
       end
