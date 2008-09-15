@@ -14,21 +14,43 @@ module NeverBlock
 	  class FiberedMysqlConnection < Mysql	      
       # needed to access the sockect by the event loop
       attr_reader :fd, :io
-        
+
+      # Initializes file desciptor and IO object
+      # return the connection object itself
+      def init_descriptor
+        @fd = socket
+        @io = IO.new(socket)
+        self
+      end
+
+      # Initializes the file descriptor and IO object for a given connection
+      # returns instance
+      def self.init_descriptor(instance)
+        instance.init_descriptor
+      end
+
+      def initialize(*args)
+        super(*args)
+        init_descriptor
+      end
+
       # Creates a new mysql connection, sets it
       # to nonblocking and wraps the descriptor in an IO
       # object.
 	    def self.real_connect(*args)
-        me = super(*args)
-        me.init_descriptor
-        me
+        init_descriptor(super(*args))
       end
-      #alias :real_connect :initialize
-      #alias :connect :initialize
-      
-      def init_descriptor
-        @fd = socket
-        @io = IO.new(socket)
+
+      def real_connect(*args)
+        super(*args).init_descriptor
+      end
+
+      def self.connect(*args)
+        init_descriptor(super(*args))
+      end
+
+      def connect(*args)
+        super(*args).init_descriptor
       end
         
       # Assuming the use of NeverBlock fiber extensions and that the exec is run in
@@ -46,7 +68,8 @@ module NeverBlock
             super(sql)
           end
         rescue Exception => e
-          reconnect if e.message.include? "not connected"
+          # TODO handle the case of losing the connection
+          # reconnect if e.message.include? "not connected"
           raise e
         end		
       end
@@ -54,12 +77,12 @@ module NeverBlock
       # reset the connection
       # and reattach to the
       # event loop
-      def reconnect
-        unregister_from_event_loop
-        super
-        init_descriptor
-        register_with_event_loop(@loop)    
-      end
+      # def reconnect
+      #  unregister_from_event_loop
+      #  super
+      #  init_descriptor
+      #  register_with_event_loop(@loop)
+      # end
       
       # Attaches the connection socket to an event loop.
       # Currently only supports EM, but Rev support will be
