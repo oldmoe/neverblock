@@ -14,7 +14,7 @@ module NeverBlock
 	  class FiberedMysqlConnection < Mysql	      
                 
       include FiberedDBConnection
-      
+        
       # Assuming the use of NeverBlock fiber extensions and that the exec is run in
       # the context of a fiber. One that have the value :neverblock set to true.
       # All neverblock IO classes check this value, setting it to false will force
@@ -39,13 +39,18 @@ module NeverBlock
       end
 
       alias :exec :query
-
+      
       # stop the connection
       # and deattach from the
       # event loop      
       def stop
         unregister_from_event_loop
         super
+
+      # The callback, this is called whenever
+      # there is data available at the socket
+      def resume_command
+        @fiber.resume
       end
       
       # reconnect 
@@ -53,7 +58,6 @@ module NeverBlock
       # event loop      
       def connect
         super
-        init_descriptor
         register_with_event_loop(@loop)    
       end
             
