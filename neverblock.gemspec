@@ -23,9 +23,9 @@ Gem::Specification.new do |s|
     "lib/never_block/servers/thin.rb",
     "lib/never_block/servers/mongrel.rb",
     "lib/never_block/db/fibered_postgres_connection.rb",
-    "lib/never_block/db/pooled_fibered_postgres_connection.rb",
+    "lib/never_block/db/pooled_db_connection.rb",
     "lib/never_block/db/fibered_mysql_connection.rb",
-    "lib/never_block/db/pooled_fibered_mysql_connection.rb",
+    "lib/never_block/db/fibered_db_connection.rb",
     "lib/active_record/connection_adapters/neverblock_postgresql_adapter.rb",
     "lib/active_record/connection_adapters/neverblock_mysql_adapter.rb"
   ]

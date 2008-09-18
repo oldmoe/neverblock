@@ -37,7 +37,7 @@ class ActiveRecord::ConnectionAdapters::NeverBlockMysqlAdapter < ActiveRecord::C
   end
 
   def connect
-    @connection = ::NB::DB::PooledFiberedMysqlConnection.new(@connection_options.shift) do
+    @connection = ::NB::DB::PooledDBConnection.new(@connection_options.shift) do
       conn = ::NB::DB::FMysql.init
       encoding = @config[:encoding]
       if encoding

@@ -28,47 +28,38 @@ class ActiveRecord::ConnectionAdapters::NeverBlockPostgreSQLAdapter < ActiveReco
       end
 
       def connect
-        size = @connection_parameters.shift
-        @connection = ::NB::DB::PooledFiberedPostgresConnection.new(@connection_parameters, size)
-
-        PGconn.translate_results = false if PGconn.respond_to?(:translate_results=)
-
-        # Ignore async_exec and async_query when using postgres-pr.
-        @async = @config[:allow_concurrency] && @connection.respond_to?(:async_exec)
-
-        # Use escape string syntax if available. We cannot do this lazily when encountering
-        # the first string, because that could then break any transactions in progress.
-        # See: http://www.postgresql.org/docs/current/static/runtime-config-compatible.html
-        # If PostgreSQL doesn't know the standard_conforming_strings parameter then it doesn't
-        # support escape string syntax. Don't override the inherited quoted_string_prefix.
-        NB.neverblock(false) do
-
-          @connection.begin_db_transaction
-          if supports_standard_conforming_strings?
-            self.class.instance_eval do
-              define_method(:quoted_string_prefix) { 'E' }
-            end
-          end
-
-          # Money type has a fixed precision of 10 in PostgreSQL 8.2 and below, and as of
-          # PostgreSQL 8.3 it has a fixed precision of 19. PostgreSQLColumn.extract_precision
-          # should know about this but can't detect it there, so deal with it here.
-          money_precision = (postgresql_version >= 80300) ? 19 : 10
-          ::ActiveRecord::ConnectionAdapters::PostgreSQLColumn.module_eval(<<-end_eval)
-            def extract_precision(sql_type)
-              if sql_type =~ /^money$/
-                #{money_precision}
-              else
-                super
+        @connection = ::NB::DB::PooledFiberedPostgresConnection.new(@connection_parameters.shift) do
+          conn = PGconn.connect(*@connection_parameters)
+          PGconn.translate_results = false if PGconn.respond_to?(:translate_results=)
+          # Ignore async_exec and async_query when using postgres-pr.
+          @async = @config[:allow_concurrency] && @connection.respond_to?(:async_exec)
+          # Use escape string syntax if available. We cannot do this lazily when encountering
+          # the first string, because that could then break any transactions in progress.
+          # See: http://www.postgresql.org/docs/current/static/runtime-config-compatible.html
+          # If PostgreSQL doesn't know the standard_conforming_strings parameter then it doesn't
+          # support escape string syntax. Don't override the inherited quoted_string_prefix.
+          NB.neverblock(false) do
+            if supports_standard_conforming_strings?
+              self.class.instance_eval do
+                define_method(:quoted_string_prefix) { 'E' }
               end
             end
-          end_eval
-
-          configure_connection
-          @connection.commit_db_transaction
-
+            # Money type has a fixed precision of 10 in PostgreSQL 8.2 and below, and as of
+            # PostgreSQL 8.3 it has a fixed precision of 19. PostgreSQLColumn.extract_precision
+            # should know about this but can't detect it there, so deal with it here.
+            money_precision = (postgresql_version >= 80300) ? 19 : 10
+            ::ActiveRecord::ConnectionAdapters::PostgreSQLColumn.module_eval(<<-end_eval)
+              def extract_precision(sql_type)
+                if sql_type =~ /^money$/
+                  #{money_precision}
+                else
+                  super
+                end
+              end
+            end_eval
+            #configure_connection
+          end
         end
-
       end
 
       # Close then reopen the connection.
