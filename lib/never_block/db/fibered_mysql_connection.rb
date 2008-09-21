@@ -46,6 +46,7 @@ module NeverBlock
       def stop
         unregister_from_event_loop
         super
+      end
 
       # The callback, this is called whenever
       # there is data available at the socket
