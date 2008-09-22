@@ -1,4 +1,5 @@
-require '../lib/neverblock'
+$:.unshift File.expand_path('..')
+require 'lib/neverblock'
 
 describe Fiber do
   before(:all) do
@@ -21,4 +22,3 @@ describe Fiber do
     @fiber = nil
   end
 end
-

@@ -1,4 +1,5 @@
-require '../lib/neverblock'
+$:.unshift File.expand_path('..')
+require 'lib/neverblock'
 
 describe NeverBlock::Pool::FiberPool do
   before(:each) do
