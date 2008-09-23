@@ -25,19 +25,28 @@ module NeverBlock
     # end
     # 32.times do
     #   Fiber.new do
-    #     conn = pool.hold # hold will pause the fiber until a connection is available
-    #     conn.execute('something') # you can use the connection normally now 
+    #     # acquire a connection from the pool
+    #     pool.hold do |conn|
+    #       conn.execute('something') # you can use the connection normally now
+    #     end
     #   end.resume
     # end
     # 
-    # The pool has support for transactions, just pass true to the pool#hold method
-    # and the connection will not be released after the block is finished
+    # The pool has support for transactions, just pass true to the
+    # pool#hold method and the connection will not be released after the block
+    # is finished
     # It is the responsibility of client code to release the connection
 		class FiberedConnectionPool
-       
-      # initialize the connection pool
-      # using the supplied proc to create the connections
-      # you can choose to start them eagerly or lazily (lazy by default)     
+
+      attr_reader :size
+
+      # initialize the connection pool using the supplied proc to create
+      # the connections
+      # You can choose to start them eagerly or lazily (lazy by default)
+      # Available options are
+      #   :size => the maximum number of connections to be created in the pool
+      #   :eager => (true|false) indicates whether connections should be
+      #             created initially or when need
 			def initialize(options = {}, &block)
 				@connections, @busy_connections, @queue = [], {},[]
 				@connection_proc = block
@@ -45,16 +54,13 @@ module NeverBlock
 				if options[:eager]
 				  @size.times do
 				    @connections << @connection_proc.call
-				  end  
+				  end
 				end
 			end
 
-      # If a connection is available,
-      # pass it to the block, otherwise 
-      # pass the fiber to the queue
-      # till a connection is available
-      # when done with a connection
-      # try to porcess other fibers in the queue
+      # If a connection is available, pass it to the block, otherwise pass
+      # the fiber to the queue till a connection is available
+      # when done with a connection try to porcess other fibers in the queue
       # before releasing the connection
       # if inside a transaction, don't release the fiber
 			def hold(transactional = false)
@@ -67,7 +73,7 @@ module NeverBlock
 			    yield conn
 			  ensure
 			    release(fiber, conn) unless transactional
-					process_queue 
+					process_queue
 			  end
 			end
 
@@ -106,7 +112,7 @@ module NeverBlock
 					fiber = @queue.shift
 					# What is really happening here?
 					# we are resuming a fiber from within
-					# another, should we call transfer insted?
+					# another, should we call transfer instead?
 					fiber.resume @busy_connections[fiber] = @connections.shift
 				end
 			end
