@@ -8,15 +8,11 @@ module NeverBlock
         @fd = socket
         @io = IO.new(socket)
         if loop == :em
-          unless EM.respond_to?(:attach)
-            puts "invalide EM version, please download the modified gem from: (http://github.com/riham/eventmachine)"
-            exit
-          end
           if EM.reactor_running?
             @em_connection = EM::attach(@io,EMConnectionHandler,self)
           else
             raise "REACTOR NOT RUNNING YA ZALAMA"
-          end 
+          end
         elsif loop.class.name == "REV::Loop"
           loop.attach(RevConnectionHandler.new(@fd))
         else
@@ -28,7 +24,7 @@ module NeverBlock
       # Unattaches the connection socket from the event loop
       def unregister_from_event_loop
         if @loop == :em
-          @em_connection.unattach(false)
+          @em_connection.detach
         else
           raise NotImplementedError.new("unregister_from_event_loop not implemented for #{@loop}")
         end
@@ -51,10 +47,10 @@ module NeverBlock
     
     module EMConnectionHandler
       def initialize connection
-        @connection = connection
+        @db_connection = connection
       end
       def notify_readable
-        @connection.resume_command
+        @db_connection.resume_command
       end
     end
   end
