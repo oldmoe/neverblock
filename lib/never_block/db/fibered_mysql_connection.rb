@@ -40,23 +40,12 @@ module NeverBlock
 
       alias :exec :query
       
-      # stop the connection
-      # and deattach from the
-      # event loop      
+      # stop the connection and deattach from the event loop
       def stop
         unregister_from_event_loop
-        super
-      end
-
-      # The callback, this is called whenever
-      # there is data available at the socket
-      def resume_command
-        @fiber.resume
       end
       
-      # reconnect 
-      # and attach to the
-      # event loop      
+      # reconnect and attach to the event loop
       def connect
         super
         register_with_event_loop(@loop)    

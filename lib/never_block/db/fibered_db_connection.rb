@@ -37,7 +37,14 @@ module NeverBlock
       # The callback, this is called whenever
       # there is data available at the socket
       def resume_command
-        @fiber.resume
+        #protection against being called several times
+        if @fiber
+          f = @fiber
+          @fiber = nil
+          f.resume
+        else
+          unregister_from_event_loop
+        end
       end
       
     end
