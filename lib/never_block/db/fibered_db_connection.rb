@@ -11,12 +11,10 @@ module NeverBlock
           if EM.reactor_running?
             @em_connection = EM::attach(@io,EMConnectionHandler,self)
           else
-            raise "REACTOR NOT RUNNING YA ZALAMA"
+            raise "EventMachine reactor not running"
           end
-        elsif loop.class.name == "REV::Loop"
-          loop.attach(RevConnectionHandler.new(@fd))
         else
-          raise "could not register with the event loop"
+          raise "Could not register with the event loop"
         end
         @loop = loop
       end  
@@ -24,7 +22,13 @@ module NeverBlock
       # Unattaches the connection socket from the event loop
       def unregister_from_event_loop
         if @loop == :em
-          @em_connection.detach
+          if @em_connection
+            @em_connection.detach
+            @em_connection = nil
+            true
+          else
+            false
+          end
         else
           raise NotImplementedError.new("unregister_from_event_loop not implemented for #{@loop}")
         end
