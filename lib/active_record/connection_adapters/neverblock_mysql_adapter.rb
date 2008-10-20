@@ -37,14 +37,14 @@ class ActiveRecord::ConnectionAdapters::NeverBlockMysqlAdapter < ActiveRecord::C
   end
 
   def connect
-    @connection = ::NB::DB::PooledDBConnection.new(@connection_options.shift) do
+    @connection = ::NB::DB::PooledDBConnection.new(@connection_options[0]) do
       conn = ::NB::DB::FMysql.init
       encoding = @config[:encoding]
       if encoding
         conn.options(::NB::DB::FMysql::SET_CHARSET_NAME, encoding) rescue nil
       end
       conn.ssl_set(@config[:sslkey], @config[:sslcert], @config[:sslca], @config[:sslcapath], @config[:sslcipher]) if @config[:sslkey]
-      conn.real_connect(*@connection_options)
+      conn.real_connect(*@connection_options[1..(@connection_options.length-1)])
       NB.neverblock(false) do
         conn.query("SET NAMES '#{encoding}'") if encoding
         # By default, MySQL 'where id is null' selects the last inserted id.

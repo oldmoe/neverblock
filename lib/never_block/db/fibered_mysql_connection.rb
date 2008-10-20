@@ -50,6 +50,12 @@ module NeverBlock
         super
         register_with_event_loop(@loop)    
       end
+
+      # unregisters from the event loop and closes the connection
+      def close
+        unregister_from_event_loop
+        super
+      end
             
     end #FiberedMySQLConnection 
 
