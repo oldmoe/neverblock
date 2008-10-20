@@ -28,8 +28,8 @@ class ActiveRecord::ConnectionAdapters::NeverBlockPostgreSQLAdapter < ActiveReco
       end
 
       def connect
-        @connection = ::NB::DB::PooledFiberedPostgresConnection.new(@connection_parameters.shift) do
-          conn = PGconn.connect(*@connection_parameters)
+        @connection = ::NB::DB::PooledFiberedPostgresConnection.new(@connection_options[0]) do
+          conn = PGconn.connect(*@connection_options[1..(@connection_options.length-1)])
           PGconn.translate_results = false if PGconn.respond_to?(:translate_results=)
           # Ignore async_exec and async_query when using postgres-pr.
           @async = @config[:allow_concurrency] && @connection.respond_to?(:async_exec)
