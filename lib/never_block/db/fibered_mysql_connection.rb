@@ -14,50 +14,51 @@ module NeverBlock
 	  class FiberedMysqlConnection < Mysql	      
                 
       include FiberedDBConnection
-        
+
+      # Initializes the connection and remembers the connection params
+      def initialize(*args)
+        @connection_params = args
+        super(*@connection_params)
+      end
+
+      # Does a normal real_connect if arguments are passed. If no arguments are
+      # passed it uses the ones it remembers
+      def real_connect(*args)
+        @connection_params = args unless args.empty?
+        super(*@connection_params)
+      end
+
+      alias_method :connect, :real_connect
+
       # Assuming the use of NeverBlock fiber extensions and that the exec is run in
       # the context of a fiber. One that have the value :neverblock set to true.
       # All neverblock IO classes check this value, setting it to false will force
       # the execution in a blocking way.
       def query(sql)
-        begin
-          if Fiber.respond_to? :current and Fiber.current[:neverblock]		      
+        if NB.event_loop_available? && NB.neverblocking?
+          begin
             send_query sql
             @fiber = Fiber.current		      
-            Fiber.yield
-            get_result 
-          else		      
-            super(sql)
+            Fiber.yield register_with_event_loop
+            get_result
+          rescue Exception => e
+            if error = ['not connected', 'gone away', 'Lost connection'].detect{|msg| e.message.include? msg}
+              event_loop_connection_close
+              unregister_from_event_loop
+              connect
+            end
+            raise e
+          ensure
+            unregister_from_event_loop
           end
-        rescue Exception => e
-          if error = ['not connected', 'gone away', 'Lost connection'].detect{|msg| e.message.include? msg}
-            stop
-            connect
-          end
-          raise e
-        end		
-      end
-
-      alias :exec :query
-      
-      # stop the connection and deattach from the event loop
-      def stop
-        unregister_from_event_loop
+        else
+          super(sql)
+        end
       end
       
-      # reconnect and attach to the event loop
-      def connect
-        super
-        register_with_event_loop(@loop)    
-      end
+      alias_method :exec, :query
 
-      # unregisters from the event loop and closes the connection
-      def close
-        unregister_from_event_loop
-        super
-      end
-            
-    end #FiberedMySQLConnection 
+    end #FiberedMySQLConnection
 
   end #DB
 

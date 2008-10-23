@@ -1,12 +1,3 @@
-# we need Fiber.current
-# so we must require
-# fiber
-# Author::    Mohammad A. Ali  (mailto:oldmoe@gmail.com)
-# Copyright:: Copyright (c) 2008 eSpace, Inc.
-# License::   Distributes under the same terms as Ruby
-
-#require 'fiber'
-
 module NeverBlock
   module Pool
 
@@ -40,7 +31,7 @@ module NeverBlock
       # every time. Once a fiber is done with its block, it attempts to fetch
       # another one from the queue
       def initialize(count = 50)
-        @fibers,@queue = [],[]
+        @fibers,@busy_fibers,@queue = [],{},[]
         count.times do |i|
           fiber = Fiber.new do |block|
             loop do
@@ -48,7 +39,9 @@ module NeverBlock
               unless @queue.empty?
                 block = @queue.shift
               else
-                block = Fiber.yield @fibers << Fiber.current
+                @busy_fibers.delete(Fiber.current.object_id)
+                @fibers << Fiber.current
+                block = Fiber.yield
               end
             end
           end
@@ -61,6 +54,7 @@ module NeverBlock
       # in a queue
       def spawn(evented = true, &block)
         if fiber = @fibers.shift
+          @busy_fibers[fiber.object_id] = fiber
           fiber[:neverblock] = evented
           fiber.resume(block)
         else

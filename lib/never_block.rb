@@ -73,6 +73,18 @@ require 'never_block/pool/fiber_pool'
 require 'never_block/pool/fibered_connection_pool'
 
 module NeverBlock
+
+  # Checks if we should be working in a non-blocking mode
+  def self.neverblocking?
+    Fiber.respond_to?(:current) && Fiber.current[:neverblock]
+  end
+
+  def self.event_loop_available?
+    defined?(EM) && EM.reactor_running?
+  end
+
+  # The given block will run its queries either in blocking or non-blocking
+  # mode based on the first parameter
   def self.neverblock(nb = true, &block)
     status = Fiber.current[:neverblock]
     Fiber.current[:neverblock] = nb

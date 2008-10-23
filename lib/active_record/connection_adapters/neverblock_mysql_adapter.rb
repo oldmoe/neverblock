@@ -13,15 +13,17 @@ class ActiveRecord::ConnectionAdapters::NeverBlockMysqlAdapter < ActiveRecord::C
   def insert_sql(sql, name = nil, pk = nil, id_value = nil, sequence_name = nil) #:nodoc:
     begin_db_transaction
     super sql, name
-    id_value || @connection.insert_id
+    id = id_value || @connection.insert_id
     commit_db_transaction
+    id
   end
 
   def update_sql(sql, name = nil) #:nodoc:
     begin_db_transaction
     super
-    @connection.affected_rows
+    rows = @connection.affected_rows
     commit_db_transaction
+    rows
   end
 
   def begin_db_transaction
@@ -51,7 +53,7 @@ class ActiveRecord::ConnectionAdapters::NeverBlockMysqlAdapter < ActiveRecord::C
         # Turn this off. http://dev.rubyonrails.org/ticket/6778
         conn.query("SET SQL_AUTO_IS_NULL=0")
       end
-      conn.register_with_event_loop(:em)
+#      conn.register_with_event_loop(:em)
       conn          
     end
   end  

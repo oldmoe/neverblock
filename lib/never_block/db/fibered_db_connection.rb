@@ -1,37 +1,32 @@
 module NeverBlock
   module DB
     module FiberedDBConnection
+
       # Attaches the connection socket to an event loop.
       # Currently only supports EM, but Rev support will be
       # completed soon.
-      def register_with_event_loop(loop)
-        @fd = socket
-        @io = IO.new(socket)
-        if loop == :em
-          if EM.reactor_running?
-            @em_connection = EM::attach(@io,EMConnectionHandler,self)
-          else
-            raise "EventMachine reactor not running"
-          end
+      def register_with_event_loop
+        if EM.reactor_running?
+          @em_connection = EM::attach(socket,EMConnectionHandler,self)
         else
-          raise "Could not register with the event loop"
+          raise "EventMachine reactor not running"
         end
-        @loop = loop
       end  
 
       # Unattaches the connection socket from the event loop
       def unregister_from_event_loop
-        if @loop == :em
-          if @em_connection
-            @em_connection.detach
-            @em_connection = nil
-            true
-          else
-            false
-          end
+        if @em_connection
+          @em_connection.detach
+          @em_connection = nil
+          true
         else
-          raise NotImplementedError.new("unregister_from_event_loop not implemented for #{@loop}")
+          false
         end
+      end
+
+      # Closes the connection using event loop
+      def event_loop_connection_close
+        @em_connection.close_connection if @em_connection
       end
            
       # The callback, this is called whenever
@@ -42,8 +37,6 @@ module NeverBlock
           f = @fiber
           @fiber = nil
           f.resume
-        else
-          unregister_from_event_loop
         end
       end
       

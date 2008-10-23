@@ -46,7 +46,7 @@ module NeverBlock
         end
       end
 
-      #close all connections and remove them from the event loop
+      #closes all connections
       def close
         @pool.all_connections do |conn|
           conn.close

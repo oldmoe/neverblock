@@ -21,11 +21,13 @@ module NeverBlock
       # All neverblock IO classes check this value, setting it to false will force
       # the execution in a blocking way.
       def exec(sql)
-        begin
-          if Fiber.respond_to? :current and Fiber.current[:neverblock]		      
+        # TODO Still not "killing the query process"-proof
+        # In some cases, the query is simply sent but the fiber never yields
+        if NB.event_loop_available? && NB.neverblocking?
+          begin
             send_query sql
-            @fiber = Fiber.current		      
-            Fiber.yield 
+            @fiber = Fiber.current
+            Fiber.yield register_with_event_loop
             while is_busy
               consume_input
               Fiber.yield if is_busy
@@ -35,26 +37,23 @@ module NeverBlock
               res = self.get_result
               data << res unless res.nil?
             end
-            data.last          
-          else		      
-            super(sql)
+            data.last
+          rescue Exception => e
+            if error = ['not connected', 'gone away', 'Lost connection','no connection'].detect{|msg| e.message.include? msg}
+              #event_loop_connection_close
+              unregister_from_event_loop
+              reset
+            end
+            raise e
+          ensure
+            unregister_from_event_loop
           end
-        rescue Exception => e
-          reset if e.message.include? "not connected"
-          raise e
-        end		
+        else
+          super(sql)
+        end
       end
 
-      alias :query :exec
-
-      # reset the connection
-      # and reattach to the
-      # event loop
-      def reset
-        unregister_from_event_loop
-        super
-        register_with_event_loop(@loop)    
-      end
+      alias_method :query, :exec
             
     end #FiberedPostgresConnection 
 
