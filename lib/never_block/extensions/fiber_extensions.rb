@@ -25,6 +25,7 @@ class Fiber
   
   def local_fiber_variables
     @local_fiber_variables ||= {}
-  end    
+  end
+
 end
 

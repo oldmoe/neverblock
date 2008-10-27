@@ -36,6 +36,8 @@ module NeverBlock
           fiber = Fiber.new do |block|
             loop do
               block.call
+              # callbacks are called in a reverse order, much like c++ destructor
+              Fiber.current[:callbacks].pop.call while Fiber.current[:callbacks].length > 0
               unless @queue.empty?
                 block = @queue.shift
               else
@@ -45,6 +47,7 @@ module NeverBlock
               end
             end
           end
+          fiber[:callbacks] = []
           fiber[:neverblock] = true
           @fibers << fiber
         end
@@ -54,6 +57,7 @@ module NeverBlock
       # in a queue
       def spawn(evented = true, &block)
         if fiber = @fibers.shift
+          fiber[:callbacks] = []
           @busy_fibers[fiber.object_id] = fiber
           fiber[:neverblock] = evented
           fiber.resume(block)

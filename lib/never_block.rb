@@ -91,6 +91,11 @@ module NeverBlock
     block.call
     Fiber.current[:neverblock] = status
   end
+
+  # Exception to be thrown for all neverblock internal errors
+  class NBError < StandardError
+  end
+
 end
 
 NB = NeverBlock

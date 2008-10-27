@@ -19,40 +19,12 @@ module NeverBlock
       end
 
       alias :exec :query
-      
-      # This method must be called for transactions to work correctly.
-      # One cannot just send "begin" as you never know which connection
-      # will be available next. This method ensures you get the same connection
-      # while in a transaction.
-      def begin_db_transaction
-        @pool.hold(true) do |conn|
-          conn.query("begin")
-        end
-      end
-      
-      # see =begin_db_transaction
-      def rollback_db_transaction
-        @pool.hold do |conn|
-          conn.query("rollback")
-          @pool.release(Fiber.current,conn)
-        end
-      end
-      
-      # see =begin_db_transaction
-      def commit_db_transaction
-        @pool.hold do |conn|
-          conn.query("commit")
-          @pool.release(Fiber.current,conn)
-        end
+
+      # Replaces the current connection with a brand new one
+      def replace_acquired_connection
+        @pool.replace_acquired_connection
       end
 
-      #closes all connections
-      def close
-        @pool.all_connections do |conn|
-          conn.close
-        end
-      end
-      
       # Pass unknown methods to the connection
       def method_missing(method, *args)
         @pool.hold do |conn|

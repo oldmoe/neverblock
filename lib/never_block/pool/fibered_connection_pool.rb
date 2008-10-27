@@ -1,14 +1,5 @@
-# Author::    Mohammad A. Ali  (mailto:oldmoe@gmail.com)
-# Copyright:: Copyright (c) 2008 eSpace, Inc.
-# License::   Distributes under the same terms as Ruby
-
 module NeverBlock
   module Pool
-    
-    # Author::    Mohammad A. Ali  (mailto:oldmoe@gmail.com)
-    # Copyright:: Copyright (c) 2008 eSpace, Inc.
-    # License::   Distributes under the same terms as Ruby
-    #
 		# This class represents a pool of connections, 
 		# you hold or release conncetions from the pool
 		# hold requests that cannot be fullfiled will be queued
@@ -58,31 +49,19 @@ module NeverBlock
 				end
 			end
 
+      def replace_acquired_connection
+        fiber = Fiber.current
+        conn = @connection_proc.call
+        @busy_connections[fiber] = conn
+        fiber[:connection] = conn
+      end
+
       # If a connection is available, pass it to the block, otherwise pass
       # the fiber to the queue till a connection is available
-      # when done with a connection try to porcess other fibers in the queue
-      # before releasing the connection
-      # if inside a transaction, don't release the fiber
-			def hold(transactional = false)
+			def hold()
 			  fiber = Fiber.current
-			  if conn = @busy_connections[fiber]
-			    return yield(conn)
-			  end
-			  conn = acquire(fiber)
-			  begin
-			    yield conn
-			  ensure
-			    release(fiber, conn) unless transactional
-					process_queue
-			  end
-			end
-
-      # Give the fiber back to the pool
-      # you have to call this explicitly if
-      # you held a connection for a transaction
-			def release(fiber, conn)
-				@busy_connections.delete(fiber)
-				@connections << conn
+        conn = acquire(fiber)
+        yield conn
 			end
 
       def all_connections
@@ -95,25 +74,45 @@ module NeverBlock
       # Can we create one?
       # Wait in the queue then
 			def acquire(fiber)
-				if !@connections.empty?
-					@busy_connections[fiber] = @connections.shift
-				elsif (@connections.length + @busy_connections.length) < @size
-					conn = @connection_proc.call
-					@busy_connections[fiber] = conn
-				else
+        return fiber[:connection] if fiber[:connection]
+        conn =  if !@connections.empty?
+          @connections.shift
+        elsif (@connections.length + @busy_connections.length) < @size
+          @connection_proc.call
+        else
+          # puts ">>>cp: acquire 5"
 					Fiber.yield @queue << fiber
-				end
+        end
+
+        # They're called in reverse order i.e. release then process_queue
+        fiber[:callbacks] << self.method(:process_queue)
+        fiber[:callbacks] << self.method(:release)
+
+        @busy_connections[fiber] = conn
+        fiber[:connection] = conn
+			end
+
+      # Give the fiber's connection back to the pool
+			def release()
+        # puts ">>>cp: release"
+        fiber = Fiber.current
+        if fiber[:connection]
+				  @busy_connections.delete(fiber)
+				  @connections << fiber[:connection]
+          fiber[:connection] = nil
+        end
 			end
 
       # Check if there are waiting fibers and
       # try to process them
 			def process_queue
+        # puts ">>>cp: process_queue"
 				while !@connections.empty? and !@queue.empty?
 					fiber = @queue.shift
 					# What is really happening here?
 					# we are resuming a fiber from within
 					# another, should we call transfer instead?
-					fiber.resume @busy_connections[fiber] = @connections.shift
+					fiber.resume @connections.shift
 				end
 			end
 			

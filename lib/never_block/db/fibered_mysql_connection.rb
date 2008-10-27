@@ -3,14 +3,10 @@ require 'mysqlplus'
 module NeverBlock
 
   module DB
-    # A modified mysql connection driver
-    # builds on the original pg driver.
-    # This driver is able to register the socket
-    # at a certain backend (EM or Rev)
-    # and then whenever the query is executed
-    # within the scope of a friendly fiber
-    # it will be done in async mode and the fiber
-    # will yield
+    # A modified mysql connection driver. It builds on the original pg driver.
+    # This driver is able to register the socket at a certain backend (EM)
+    # and then whenever the query is executed within the scope of a friendly
+    # fiber. It will be done in async mode and the fiber will yield
 	  class FiberedMysqlConnection < Mysql	      
                 
       include FiberedDBConnection
@@ -36,20 +32,19 @@ module NeverBlock
       # the execution in a blocking way.
       def query(sql)
         if NB.event_loop_available? && NB.neverblocking?
+          raise ::NB::NBError.new("FiberedMysqlConnection: The running fiber is attached to a connection other than the current one") if (c = Fiber.current[:connection]) && c != self
           begin
             send_query sql
-            @fiber = Fiber.current		      
             Fiber.yield register_with_event_loop
             get_result
           rescue Exception => e
             if error = ['not connected', 'gone away', 'Lost connection'].detect{|msg| e.message.include? msg}
               event_loop_connection_close
               unregister_from_event_loop
-              connect
+              remove_unregister_from_event_loop_callbacks
+              #connect
             end
             raise e
-          ensure
-            unregister_from_event_loop
           end
         else
           super(sql)

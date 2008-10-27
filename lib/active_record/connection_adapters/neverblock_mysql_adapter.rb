@@ -11,50 +11,36 @@ class ActiveRecord::ConnectionAdapters::NeverBlockMysqlAdapter < ActiveRecord::C
   end
 
   def insert_sql(sql, name = nil, pk = nil, id_value = nil, sequence_name = nil) #:nodoc:
-    begin_db_transaction
     super sql, name
-    id = id_value || @connection.insert_id
-    commit_db_transaction
-    id
+    id_value || @connection.insert_id
   end
 
   def update_sql(sql, name = nil) #:nodoc:
-    begin_db_transaction
     super
-    rows = @connection.affected_rows
-    commit_db_transaction
-    rows
-  end
-
-  def begin_db_transaction
-    @connection.begin_db_transaction
-  end
-  
-  def commit_db_transaction
-    @connection.commit_db_transaction
-  end
-
-  def rollback_db_transaction
-    @connection.rollback_db_transaction
+    @connection.affected_rows
   end
 
   def connect
-    @connection = ::NB::DB::PooledDBConnection.new(@connection_options[0]) do
-      conn = ::NB::DB::FMysql.init
-      encoding = @config[:encoding]
-      if encoding
-        conn.options(::NB::DB::FMysql::SET_CHARSET_NAME, encoding) rescue nil
+    #initialize the connection pool
+    unless @connection
+      @connection = ::NB::DB::PooledDBConnection.new(@connection_options[0]) do
+        conn = ::NB::DB::FMysql.init
+        encoding = @config[:encoding]
+        if encoding
+          conn.options(::NB::DB::FMysql::SET_CHARSET_NAME, encoding) rescue nil
+        end
+        conn.ssl_set(@config[:sslkey], @config[:sslcert], @config[:sslca], @config[:sslcapath], @config[:sslcipher]) if @config[:sslkey]
+        conn.real_connect(*@connection_options[1..(@connection_options.length-1)])
+        NB.neverblock(false) do
+          conn.query("SET NAMES '#{encoding}'") if encoding
+          # By default, MySQL 'where id is null' selects the last inserted id.
+          # Turn this off. http://dev.rubyonrails.org/ticket/6778
+          conn.query("SET SQL_AUTO_IS_NULL=0")
+        end
+        conn
       end
-      conn.ssl_set(@config[:sslkey], @config[:sslcert], @config[:sslca], @config[:sslcapath], @config[:sslcipher]) if @config[:sslkey]
-      conn.real_connect(*@connection_options[1..(@connection_options.length-1)])
-      NB.neverblock(false) do
-        conn.query("SET NAMES '#{encoding}'") if encoding
-        # By default, MySQL 'where id is null' selects the last inserted id.
-        # Turn this off. http://dev.rubyonrails.org/ticket/6778
-        conn.query("SET SQL_AUTO_IS_NULL=0")
-      end
-#      conn.register_with_event_loop(:em)
-      conn          
+    else  # we have a connection pool, we need to recover a connection
+      @connection.replace_acquired_connection
     end
   end  
 
