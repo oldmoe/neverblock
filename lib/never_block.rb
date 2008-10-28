@@ -4,6 +4,7 @@
 
 $:.unshift File.expand_path(File.dirname(__FILE__))
 
+# Thanks to Aman Gupta for writing the Ruby 1.8 Fiber simulator
 unless defined? Fiber
   require 'thread'
   require 'singleton'
