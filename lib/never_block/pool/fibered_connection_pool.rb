@@ -74,13 +74,17 @@ module NeverBlock
       # Can we create one?
       # Wait in the queue then
 			def acquire(fiber)
+        # A special case for rails when doing ActiveRecord stuff when not yet
+        # running in the context of a request (fiber) like in the case of AR
+        # queries in environment.rb (Root Fiber)
+        return @connections.first unless fiber[:callbacks]
+
         return fiber[:connection] if fiber[:connection]
         conn =  if !@connections.empty?
           @connections.shift
         elsif (@connections.length + @busy_connections.length) < @size
           @connection_proc.call
         else
-          # puts ">>>cp: acquire 5"
 					Fiber.yield @queue << fiber
         end
 
@@ -94,7 +98,6 @@ module NeverBlock
 
       # Give the fiber's connection back to the pool
 			def release()
-        # puts ">>>cp: release"
         fiber = Fiber.current
         if fiber[:connection]
 				  @busy_connections.delete(fiber)
@@ -106,7 +109,6 @@ module NeverBlock
       # Check if there are waiting fibers and
       # try to process them
 			def process_queue
-        # puts ">>>cp: process_queue"
 				while !@connections.empty? and !@queue.empty?
 					fiber = @queue.shift
 					# What is really happening here?

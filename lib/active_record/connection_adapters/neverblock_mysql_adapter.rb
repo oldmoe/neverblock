@@ -42,7 +42,7 @@ class ActiveRecord::ConnectionAdapters::NeverBlockMysqlAdapter < ActiveRecord::C
     else  # we have a connection pool, we need to recover a connection
       @connection.replace_acquired_connection
     end
-  end  
+  end
 
 end
 
