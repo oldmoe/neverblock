@@ -48,6 +48,7 @@ module NeverBlock
             end
           end
           fiber[:callbacks] = []
+          fiber[:em_keys] = []
           fiber[:neverblock] = true
           @fibers << fiber
         end

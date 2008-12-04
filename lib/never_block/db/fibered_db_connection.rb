@@ -11,9 +11,11 @@ module NeverBlock
           @fiber = Fiber.current
           #puts ">>>>>register_with_event_loop fiber #{@fiber.inspect}"
           # When there's no previous em_connection
-          unless @fiber[em_connection_with_pool_key]
-            @fiber[em_connection_with_pool_key] = EM::attach(socket,EMConnectionHandler,self)
+          key = em_connection_with_pool_key
+          unless @fiber[key]
+            @fiber[key] = EM::attach(socket,EMConnectionHandler,self)
             @fiber[:callbacks] << self.method(:unregister_from_event_loop)
+            @fiber[:em_keys] << key
           end
         else
           raise ::NB::NBError.new("FiberedDBConnection: EventMachine reactor not running")
@@ -23,9 +25,10 @@ module NeverBlock
       # Unattaches the connection socket from the event loop
       def unregister_from_event_loop
         #puts ">>>>>unregister_from_event_loop #{self.inspect} #{@fiber.inspect}"
-        if em_c = @fiber[em_connection_with_pool_key]
+        key = @fiber[:em_keys].pop
+        if em_c = @fiber[key]
           em_c.detach
-          @fiber[em_connection_with_pool_key] = nil
+          @fiber[key] = nil
           true
         else
           false
@@ -41,7 +44,8 @@ module NeverBlock
 
       # Closes the connection using event loop
       def event_loop_connection_close
-        @fiber[em_connection_with_pool_key].close_connection if @fiber[em_connection_with_pool_key]
+        key = em_connection_with_pool_key
+        @fiber[key].close_connection if @fiber[key]
       end
            
       # The callback, this is called whenever
