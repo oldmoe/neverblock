@@ -53,7 +53,7 @@ module NeverBlock
         fiber = Fiber.current
         conn = @connection_proc.call
         @busy_connections[fiber] = conn
-        fiber[:connection] = conn
+        fiber[connection_pool_key] = conn
       end
 
       # If a connection is available, pass it to the block, otherwise pass
@@ -79,7 +79,8 @@ module NeverBlock
         # queries in environment.rb (Root Fiber)
         return @connections.first unless fiber[:callbacks]
 
-        return fiber[:connection] if fiber[:connection]
+        fiber[:current_pool_key] = connection_pool_key
+        return fiber[connection_pool_key] if fiber[connection_pool_key]
         conn =  if !@connections.empty?
           @connections.shift
         elsif (@connections.length + @busy_connections.length) < @size
@@ -93,16 +94,16 @@ module NeverBlock
         fiber[:callbacks] << self.method(:release)
 
         @busy_connections[fiber] = conn
-        fiber[:connection] = conn
+        fiber[connection_pool_key] = conn
 			end
 
       # Give the fiber's connection back to the pool
 			def release()
         fiber = Fiber.current
-        if fiber[:connection]
+        if fiber[connection_pool_key]
 				  @busy_connections.delete(fiber)
-				  @connections << fiber[:connection]
-          fiber[:connection] = nil
+				  @connections << fiber[connection_pool_key]
+          fiber[connection_pool_key] = nil
         end
 			end
 
@@ -117,6 +118,10 @@ module NeverBlock
 					fiber.resume @connections.shift
 				end
 			end
+			
+			def connection_pool_key
+			  @connection_pool_key ||= "connection_pool_#{object_id}".intern
+		  end
 			
 		end #FiberedConnectionPool
 		
