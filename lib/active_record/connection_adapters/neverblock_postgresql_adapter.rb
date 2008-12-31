@@ -9,17 +9,6 @@ class ActiveRecord::ConnectionAdapters::NeverBlockPostgreSQLAdapter < ActiveReco
         'NeverBlockPostgreSQL'
       end
 
-      def begin_db_transaction
-        @connection.begin_db_transaction
-      end
-      
-      def commit_db_transaction
-        @connection.commit_db_transaction
-      end
-
-      def rollback_db_transaction
-        @connection.rollback_db_transaction
-      end
       # Executes an INSERT query and returns the new record's ID, this wont
       # work on earlier versions of PostgreSQL but they don't suppor the async
       # interface anyway
@@ -28,9 +17,10 @@ class ActiveRecord::ConnectionAdapters::NeverBlockPostgreSQLAdapter < ActiveReco
       end
 
       def connect
-        @connection = ::NB::DB::PooledFiberedPostgresConnection.new(@connection_options[0]) do
-          conn = PGconn.connect(*@connection_options[1..(@connection_options.length-1)])
-          PGconn.translate_results = false if PGconn.respond_to?(:translate_results=)
+        @connection = ::NB::DB::PooledDBConnection.new(@connection_parameters[0]) do
+          conn = ::NB::DB::FiberedPostgresConnection.connect(*@connection_parameters[1..(@connection_parameters.length-1)])
+=begin
+          ::NB::DB::FiberedPostgresConnection.translate_results = false if ::NB::DB::FiberedPostgresConnection.respond_to?(:translate_results=)
           # Ignore async_exec and async_query when using postgres-pr.
           @async = @config[:allow_concurrency] && @connection.respond_to?(:async_exec)
           # Use escape string syntax if available. We cannot do this lazily when encountering
@@ -59,6 +49,8 @@ class ActiveRecord::ConnectionAdapters::NeverBlockPostgreSQLAdapter < ActiveReco
             end_eval
             #configure_connection
           end
+	  conn
+=end
         end
       end
 
