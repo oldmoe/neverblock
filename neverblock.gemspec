@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name     = "neverblock"
-  s.version  = "0.1.5"
+  s.version  = "0.1.6"
   s.date     = "2008-11-06"
   s.summary  = "Utilities for non-blocking stack components"
   s.email    = "oldmoe@gmail.com"
