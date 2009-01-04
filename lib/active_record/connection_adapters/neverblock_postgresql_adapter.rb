@@ -12,9 +12,9 @@ class ActiveRecord::ConnectionAdapters::NeverBlockPostgreSQLAdapter < ActiveReco
       # Executes an INSERT query and returns the new record's ID, this wont
       # work on earlier versions of PostgreSQL but they don't suppor the async
       # interface anyway
-      def insert(sql, name = nil, pk = nil, id_value = nil, sequence_name = nil)
-        @connection.exec(sql << " returning id ") 
-      end
+#      def insert(sql, name = nil, pk = nil, id_value = nil, sequence_name = nil)
+#        @connection.exec(sql << " returning id ") 
+#      end
 
       def connect
         @connection = ::NB::DB::PooledDBConnection.new(@connection_parameters[0]) do
