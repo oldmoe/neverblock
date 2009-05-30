@@ -40,13 +40,11 @@ module NeverBlock
             data.last
           rescue Exception => e
             if error = ['not connected', 'gone away', 'Lost connection','no connection'].detect{|msg| e.message.include? msg}
-              #event_loop_connection_close
+              event_loop_connection_close
               unregister_from_event_loop
-              reset
+              remove_unregister_from_event_loop_callbacks
             end
             raise e
-          ensure
-            unregister_from_event_loop
           end
         else
           super(sql)
