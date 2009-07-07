@@ -31,8 +31,9 @@ module NeverBlock
 
   def self.wait(mode, io)
     fiber = NB::Fiber.current
-    NB.reactor.attach(mode, io){NB.reactor.detach(mode, io);fiber.resume}
+    NB.reactor.attach(mode, io){fiber.resume}
     NB::Fiber.yield
+    NB.reactor.detach(mode, io)
   end
 
 end

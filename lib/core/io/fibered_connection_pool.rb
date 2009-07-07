@@ -69,9 +69,9 @@ module NeverBlock
 
       # Give the fiber's connection back to the pool
 			def release(conn)
-				  @busy_connections.delete(conn.object_id)
-				  @connections << conn unless @connections.include? conn
-        end
+			  @busy_connections.delete(conn.object_id)
+			  @connections << conn unless @connections.include? conn
+        process_queue
 			end
 
       def all_connections
@@ -89,7 +89,7 @@ module NeverBlock
         elsif (@connections.length + @busy_connections.length) < @size
           @connection_proc.call
         else
-					Fiber.yield @queue << fiber
+					NB::Fiber.yield @queue << fiber
         end
         @busy_connections[conn.object_id] = conn
 			end

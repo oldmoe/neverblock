@@ -12,6 +12,9 @@ NB = NeverBlock
 require 'core/reactor'
 require 'core/system'
 require 'core/io/fibered_connection_pool'
+require 'core/io/neverblock_io'
+require 'core/io/db/fibered_mysql_connection'
+require 'core/io/db/fibered_postgres_connection'
 require 'core/concurrent/fiber_pool'
 
 module NeverBlock

@@ -7,7 +7,7 @@ module NeverBlock
     # This driver is able to register the socket at a certain backend (EM)
     # and then whenever the query is executed within the scope of a friendly
     # fiber. It will be done in async mode and the fiber will yield
-	  class FiberedMysqlConnection < Mysql	      
+	  class FiberedMysqlConnection < Mysql
                 
       # Initializes the connection and remembers the connection params
       def initialize(*args)
@@ -31,7 +31,7 @@ module NeverBlock
       def query(sql)
         if NB.neverblocking? && NB.reactor.running?
           send_query sql
-          NB.wait(:read, socket)
+          NB.wait(:read, IO.new(socket))
           get_result
         else
           super(sql)

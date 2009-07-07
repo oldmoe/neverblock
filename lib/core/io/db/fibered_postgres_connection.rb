@@ -7,14 +7,12 @@ module NeverBlock
     # A modified postgres connection driver
     # builds on the original pg driver.
     # This driver is able to register the socket
-    # at a certain backend (EM or Rev)
+    # at a certain backend (Reacotr)
     # and then whenever the query is executed
-    # within the scope of a friendly fiber
+    # within the scope of a friendly fiber (NB::Fiber)
     # it will be done in async mode and the fiber
     # will yield
-	  class FiberedPostgresConnection < PGconn	      
-              
-      include FiberedDBConnection
+	  class FiberedPostgresConnection < PGconn	                    
 
       # Assuming the use of NeverBlock fiber extensions and that the exec is run in
       # the context of a fiber. One that have the value :neverblock set to true.
@@ -23,29 +21,18 @@ module NeverBlock
       def exec(sql)
         # TODO Still not "killing the query process"-proof
         # In some cases, the query is simply sent but the fiber never yields
-        if NB.event_loop_available? && NB.neverblocking?
-          begin
-            send_query sql
-            @fiber = Fiber.current
-            Fiber.yield register_with_event_loop
-            while is_busy
-              consume_input
-              Fiber.yield if is_busy
-            end
-            res, data = 0, []
-            while res != nil
-              res = self.get_result
-              data << res unless res.nil?
-            end
-            data.last
-          rescue Exception => e
-            if error = ['not connected', 'gone away', 'Lost connection','no connection'].detect{|msg| e.message.include? msg}
-              event_loop_connection_close
-              unregister_from_event_loop
-              remove_unregister_from_event_loop_callbacks
-            end
-            raise e
+        if NB.neverblocking? && NB.reactor.running?
+          send_query sql
+          while is_busy
+            NB.wait(:read, IO.new(socket))
+            consume_input
           end
+          res, data = 0, []
+          while res != nil
+            res = self.get_result
+            data << res unless res.nil?
+          end
+          data.last
         else
           super(sql)
         end
@@ -59,4 +46,4 @@ module NeverBlock
 
 end #NeverBlock
 
-NeverBlock::DB::FPGconn = NeverBlock::DB::FiberedPostgresConnection
+NeverBlock::DB::FPGConn = NeverBlock::DB::FiberedPostgresConnection
