@@ -112,11 +112,11 @@ class IO
   end
 
 	def syswrite(*args)	
-		if NB.neverblocking?
+#		if NB.neverblocking?
 			write_neverblock(*args)
-		else
-			write_blocking(*args)
-		end
+#		else
+#			write_blocking(*args)
+#		end
 	end
   
 	def write(*args)
