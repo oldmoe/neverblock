@@ -3,12 +3,17 @@ require 'concurrent/fiber'
 require 'timeout'
 
 module Kernel
+  alias_method :blocking_sleep, :sleep
   def sleep(time=nil)
-    NB::Fiber.yield if time.nil?
-    return if time <= 0
-    fiber = NB::Fiber.current
-    NB.reactor.add_timer(time){fiber.resume}
-    NB::Fiber.yield
+    if NB.neverblocking?
+      NB::Fiber.yield if time.nil?
+      return if time <= 0
+      fiber = NB::Fiber.current
+      NB.reactor.add_timer(time){fiber.resume}
+      NB::Fiber.yield
+    else
+      blocking_sleep(time)
+    end
   end
 
   def system(cmd, *args)

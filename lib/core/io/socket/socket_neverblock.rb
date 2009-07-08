@@ -25,7 +25,7 @@ class BasicSocket < IO
   end
 
 	def recv(*args)
-		res = if NB.neverblocking?
+		if NB.neverblocking?
 			recv_neverblock(*args)
     else
       recv_blocking(*args)
@@ -67,3 +67,4 @@ class TCPSocket < Socket
     self.connect(Socket.sockaddr_in(*(args.reverse)))
   end
 end
+

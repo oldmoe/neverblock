@@ -8,6 +8,7 @@ require 'fcntl'
 class IO
 
 	NB_BUFFER_LENGTH = 128*1024
+  NB_WRITE_BUFFER_LENGTH = 8*1024
   alias_method :read_blocking, :sysread
   alias_method :write_blocking, :syswrite
 
@@ -21,6 +22,10 @@ class IO
 
 	def buffer
 	 @buffer ||= ""
+	end		
+
+	def buffer=(value)
+	 @buffer = value
 	end		
 
 	#	This method is the delegation method which reads using read_nonblock()
@@ -48,52 +53,54 @@ class IO
 
   def sysread(*args)
 		if NB.neverblocking?
-			res = read_neverblock(*args)
+      read_neverblock(*args)
     else
-      res = read_blocking(*args)
+      read_blocking(*args)
     end
-		res
   end
   
   def read(length=nil, sbuffer=nil)
     return '' if length == 0
-    if length.nil?
-      sbuffer.nil? ? sbuffer = '' : sbuffer.delete!(sbuffer)
-      # we need to read till end of stream
-	    eof=false
-      while !eof 
-        begin 
-          sbuffer << sysread(NB_BUFFER_LENGTH)
-          eof = true if sbuffer.length == 0 
-        rescue EOFError
-      	  eof = true
-        end
-      end 
-      if sbuffer.length > 0
-        return sbuffer
-      else
-        return length.nil? ? '' : nil
-      end
-    else
-    eof = false
     if sbuffer.nil?
       sbuffer = '' 
     else
      sbuffer = sbuffer.to_str
      sbuffer.delete!(sbuffer)
-    end
-    remaining_length = length
-	  while sbuffer.length < length && !eof && remaining_length > 0 
-		  begin 
-			  sbuffer << sysread(NB_BUFFER_LENGTH > remaining_length ? remaining_length : NB_BUFFER_LENGTH)
-        remaining_length = remaining_length - NB_BUFFER_LENGTH   
-		  rescue EOFError
-        eof=true
-			  return nil if sbuffer.length.zero? && length > 0
-		  end #begin
-	  end	#while	  
+    end    
+    if length.nil?
+      # we need to read till end of stream
+      loop do
+        begin 
+          sbuffer << sysread(NB_BUFFER_LENGTH)
+        rescue EOFError
+      	  break
+        end
+      end
+      return sbuffer 
+    else # length != nil
+      if self.buffer.length >= length
+        sbuffer << self.buffer.slice!(0, length)
+        return sbuffer
+      elsif self.buffer.length > 0
+        sbuffer << self.buffer
+      end
+      self.buffer = ''
+      remaining_length = length - sbuffer.length
+	    while sbuffer.length < length && remaining_length > 0 
+		    begin 
+			    sbuffer << sysread(NB_BUFFER_LENGTH < remaining_length ? remaining_length : NB_BUFFER_LENGTH)
+          remaining_length = remaining_length - sbuffer.length   
+		    rescue EOFError
+			    return nil if sbuffer.length.zero? && length > 0
+          return sbuffer if sbuffer.length <= length
+          break
+		    end #begin
+	    end	#while	  
     end #if length 
-		return sbuffer
+    return nil if sbuffer.length.zero? && length > 0
+    return sbuffer if sbuffer.length <= length
+		self.buffer << sbuffer.slice!(length, sbuffer.length-1)
+    return sbuffer
   end
 
   def write_neverblock(data)
@@ -107,20 +114,21 @@ class IO
       set_flags(old_flags)
   		NB.wait(:write, self)
 			retry
-	end
+	  end
 		written
   end
 
 	def syswrite(*args)	
-#		if NB.neverblocking?
+		if NB.neverblocking?
 			write_neverblock(*args)
-#		else
-#			write_blocking(*args)
-#		end
+		else
+			write_blocking(*args)
+		end
 	end
   
-	def write(*args)
-		syswrite(*args)
+	def write(data)
+    return 0 if data.to_s.empty?
+		syswrite(data)
 	end 
 	
 	def gets(*args)
