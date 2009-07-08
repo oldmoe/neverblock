@@ -86,7 +86,9 @@ NB::Fiber.new do
       @contents = "1234567890"
       open @fname, "w" do |io| io.write @contents end
 
-      @io = open @fname, "r+"
+      #@io = open @fname, "r+"
+      @io, @w = IO.pipe
+      @w.write @contents 
     end
 
     after :each do
@@ -216,15 +218,6 @@ NB::Fiber.new do
       @io.read(nil, buf).object_id.should == buf.object_id
     end
 
-  #  it "coerces the second argument to string and uses it as a buffer" do
-   #   buf = "ABCDE"
-   #   obj = mock("buff")
-   #   obj.should_receive(:to_str).any_number_of_times.and_return(buf)
-
-  #    @io.read(15, obj).object_id.should_not == obj.object_id
-   #   buf.should == @contents
-   # end
-
     it "returns an empty string at end-of-file" do
       @io.read
       @io.read.should == ''
@@ -254,7 +247,7 @@ NB::Fiber.new do
       @io.read(@contents.length + 1).should == @contents
     end
     
-  it "returns an empty string at end-of-file" do
+    it "returns an empty string at end-of-file" do
       @io.read
       @io.read.should == ''
     end
@@ -290,9 +283,10 @@ NB::Fiber.new do
         $KCODE = old
       end
     end
-   
-
-
 
   end
+      NB.reactor.add_timer(1){NB.reactor.stop}
+    NB.reactor.run
+
 end.resume
+
