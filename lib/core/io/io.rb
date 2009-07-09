@@ -43,8 +43,7 @@ class IO
 	#	Otherwise it uses the original ruby read method.
 
   def sysread(length)
-		return rb_sysread(length) unless self.neverblock?
-    read_neverblock(length)
+    self.neverblock? ? read_neverblock(length) : rb_sysread(length)
   end
   
   def read(length=nil, sbuffer=nil)
@@ -80,8 +79,6 @@ class IO
 			    sbuffer << sysread(NB_BUFFER_LENGTH < remaining_length ? remaining_length : NB_BUFFER_LENGTH)
           remaining_length = remaining_length - sbuffer.length   
 		    rescue EOFError
-			    return nil if sbuffer.length.zero? && length > 0
-          return sbuffer if sbuffer.length <= length
           break
 		    end #begin
 	    end	#while	  
@@ -118,40 +115,24 @@ class IO
 		syswrite(data)
 	end 
 	
-	def gets(*args)
-    return rb_gets(data) if self.file?
+	def gets(sep=$/)
+    return rb_gets(sep) if self.file?
 		res = ""
-		args[0] = "\n\n" if args[0] == ""
-		if args.length == 0
-			condition = proc{|res|res.index("\n").nil?}
-		elsif args.length == 1
-			if args[0] == nil
-				condition = proc{|res|true}		
-			else
-				condition = proc{|res|res.index(args[0]).nil?}
-			end
-		elsif args.length == 2
-			count = args[1]
-			if args[0] == nil
-				condition = proc{|res| count = count - 1; count > -1}
-			else 
-				condition = proc{|res| count = count - 1; count > -1 && res.index(args[0]).nil?}
-			end
+		sep = "\n\n" if sep == ""
+		sep = $/ if sep.nil?
+		while res.index(sep).nil?
+		  break if (c = read(1)).nil
+		  res << c
 		end
-		begin		
-			while condition.call(res)
-			  res << read(1)
-			end
-		rescue EOFError
-		end
+		$_ = res
 		res
 	end
 	
-	def readlines
-    return rb_readlines if self.file?
+	def readlines(sep=$/)
+    return rb_readlines(sep) if self.file?
 		res = []
 		begin
-			loop{res << readline}
+			loop{res << readline(sep)}
 		rescue EOFError
 		end
 		res
@@ -159,7 +140,9 @@ class IO
 	
 	def readchar
     return rb_readchar if self.file?
-		sysread(1)[0]
+		ch = read(1)
+		raise EOFError if ch.nil?
+		ch
 	end
 	
 	def getc
@@ -171,8 +154,8 @@ class IO
 		end
 	end
 
-	def readline(sep = "\n")
-    return rb_readline if self.file?
+	def readline(sep = $/)
+    return rb_readline(sep) if self.file?
 		res = gets(sep)
 		raise EOFError if res == nil
 		res
