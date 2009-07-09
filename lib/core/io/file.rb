@@ -1,9 +1,4 @@
 require 'thread'
-require 'reactor'
-
-class Reactor::Base
-  protected  
-end
 
 class File < IO
 
