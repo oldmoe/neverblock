@@ -19,7 +19,7 @@ class IO
   alias_method :rb_readline,  :readline
   alias_method :rb_readlines, :readlines
   alias_method :rb_print,     :print
-
+  
 	#	This method is the delegation method which reads using read_nonblock()
 	#	and registers the IO call with event loop if the call blocks. The value
 	# @immediate_result is used to get the value that method got before it was blocked.
@@ -48,7 +48,7 @@ class IO
   end
   
   def read(length=nil, sbuffer=nil)
-    return rb_read(length, sbuffer) unless self.file?
+    return rb_read(length, sbuffer) if self.file?
     return '' if length == 0
     if sbuffer.nil?
       sbuffer = '' 
@@ -114,12 +114,12 @@ class IO
   
 	def write(data)
     return 0 if data.to_s.empty?
-    return rb_write(data) unless self.file?
+    return rb_write(data) if self.file?
 		syswrite(data)
 	end 
 	
 	def gets(*args)
-    return rb_gets(data) unless self.file?
+    return rb_gets(data) if self.file?
 		res = ""
 		args[0] = "\n\n" if args[0] == ""
 		if args.length == 0
@@ -148,7 +148,7 @@ class IO
 	end
 	
 	def readlines
-    return rb_readlines unless self.file?
+    return rb_readlines if self.file?
 		res = []
 		begin
 			loop{res << readline}
@@ -158,12 +158,12 @@ class IO
 	end
 	
 	def readchar
-    return rb_readchar unless self.file?
+    return rb_readchar if self.file?
 		sysread(1)[0]
 	end
 	
 	def getc
-    return rb_getc if unless self.file?
+    return rb_getc if self.file?
 		begin
 			res = readchar
 		rescue EOFError
@@ -172,17 +172,17 @@ class IO
 	end
 
 	def readline(sep = "\n")
-    return rb_readline unless self.file?
+    return rb_readline if self.file?
 		res = gets(sep)
 		raise EOFError if res == nil
 		res
 	end
 	
 	def print(*args)
-    return rb_print unless self.file?
+    return rb_print if self.file?
 		args.each{|element|syswrite(element)}
 	end
-	
+
 	protected
 
   def get_flags
@@ -208,5 +208,5 @@ class IO
   def neverblock?
     !file? && NB.neverblocking?
 	end	
-end
 
+end
