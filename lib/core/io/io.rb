@@ -121,7 +121,7 @@ class IO
 		sep = "\n\n" if sep == ""
 		sep = $/ if sep.nil?
 		while res.index(sep).nil?
-		  break if (c = read(1)).nil
+		  break if (c = read(1)).nil?
 		  res << c
 		end
 		$_ = res

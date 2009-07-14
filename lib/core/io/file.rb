@@ -21,7 +21,7 @@ class File < IO
   def self.neverblock(*methods)
     methods.each do |method|  
       class_eval %{
-        def #{method}(args)
+        def #{method}(*args)
           return rb_#{method}(*args) unless NB.neverblocking?
           @@queue << [self, :#{method}, args, NB::Fiber.current, NB.reactor]
           NB::Fiber.yield      
