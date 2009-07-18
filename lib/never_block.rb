@@ -1,5 +1,5 @@
 # Author::    Mohammad A. Ali  (mailto:oldmoe@gmail.com)
-# Copyright:: Copyright (c) 2008 eSpace, Inc.
+# Copyright:: Copyright (c) 2009 eSpace, Inc.
 # License::   Distributes under the same terms as Ruby
 
 $:.unshift File.expand_path(File.dirname(__FILE__))
@@ -27,16 +27,3 @@ module NeverBlock
 end
 
 NB = NeverBlock
-
-require 'core/reactor'
-require 'core/system'
-require 'core/io/fibered_connection_pool'
-require 'core/io/io'
-require 'core/io/file'
-require 'core/io/db/fibered_mysql_connection'
-require 'core/io/db/fibered_postgres_connection'
-require 'core/concurrent/fiber_pool'
-require 'core/io/socket/socket_neverblock'
-
-
-
