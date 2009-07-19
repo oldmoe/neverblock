@@ -20,6 +20,8 @@ Gem::Specification.new do |s|
                 "lib/neverblock/io/db/drivers/mysql.rb",
                 "lib/neverblock/io/db/drivers/postgres.rb",
                 "lib/neverblock/io/db/connection.rb",
+                "lib/neverblock/io/db/fibered_connection_pool.rb",
+                "lib/neverblock/io/db/fibered_mysql_connection.rb",
                 "lib/neverblock/io/file.rb",
                 "lib/neverblock/io/socket.rb",
                 "lib/neverblock/io/io.rb",

@@ -1,9 +1,6 @@
 # encoding: utf-8
 require File.dirname(__FILE__) + '/../spec_helper'
 require File.dirname(__FILE__) + '/fixtures/classes'
- require File.expand_path(File.dirname(__FILE__) + "/../never_block/io/neverblock_io")
- require File.expand_path(File.dirname(__FILE__) + "/../never_block/socket/socket_neverblock")
- require File.expand_path(File.dirname(__FILE__) + "/../neverblock")
 
 ruby_version_is '1.8.7' do
   describe "IO#bytes" do

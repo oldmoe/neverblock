@@ -1,10 +1,4 @@
-
 require 'mysqlplus'
-require File.expand_path(File.dirname(__FILE__)+'/../../../../neverblock')
-require File.expand_path(File.dirname(__FILE__)+'/../connection')
-require File.expand_path(File.dirname(__FILE__)+'/../fibered_mysql_connection')
-require File.expand_path(File.dirname(__FILE__)+'/../pool')
-
 
 module NeverBlock
 
@@ -13,7 +7,7 @@ module NeverBlock
     # This driver is able to register the socket at a certain backend (EM)
     # and then whenever the query is executed within the scope of a friendly
     # fiber. It will be done in async mode and the fiber will yield
-	  class Mysql < ::Mysql
+	  class FiberedMysqlConnection < Mysql
                 
       # Initializes the connection and remembers the connection params
       def initialize(*args)
@@ -46,28 +40,10 @@ module NeverBlock
       
       alias_method :exec, :query
 
-    end #MySQL
-
-    class PooledMySQL < ::NeverBlock::DB::Connection
-
-      def initialize(*args)
-        options = {}
-        if args #&& (options = args.last).is_a? Hash
-          size = options[:size] || 4
-          eager = options[:eager] || true
-          args.pop
-        end
-        @pool = NB::DB::Pool.new(:size=>size, :eager=>eager) do
-          MySQL.new(*args)
-        end
-      end
-
-    end #PooledMySQL
+    end #FiberedMySQLConnection
 
   end #DB
 
-
 end #NeverBlock
-    
 
-
+NeverBlock::DB::FMysql = NeverBlock::DB::FiberedMysqlConnection

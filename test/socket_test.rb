@@ -20,7 +20,7 @@ class SocketTest < MiniTest::Unit::TestCase
     end
     sleep 0.5
     super
-    require '../lib/neverblock'
+    require '../lib/io'
   end
 
   def test_tcpsocket_recv

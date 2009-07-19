@@ -1,11 +1,12 @@
 require 'minitest/unit'
+require File.expand_path(File.dirname(__FILE__)+'/../lib/neverblock/io/db/fibered_connection_pool')
 
 MiniTest::Unit.autorun
 
 class MySQLAdapterTest < MiniTest::Unit::TestCase
   def setup
     super
-    require '../lib/neverblock'
+    require File.expand_path(File.dirname(__FILE__)+'/../lib/neverblock/io/db/drivers/mysql')
     @count = 20
   end
   
@@ -13,7 +14,7 @@ class MySQLAdapterTest < MiniTest::Unit::TestCase
     cpool = []    
     
     @count.times do
-     cpool << NB::DB::FiberedMysqlConnection.real_connect('localhost','root','root')
+     cpool << NB::DB::FiberedMysqlConnection.real_connect('localhost','root','home')
     end
 
     @done = 0
@@ -36,7 +37,7 @@ class MySQLAdapterTest < MiniTest::Unit::TestCase
 
   def test_pooled_concurrent_processing
     cpool = NB::Pool::FiberedConnectionPool.new(size:(@count/2).to_i, eager:true) do
-      c = NB::DB::FiberedMysqlConnection.real_connect('localhost','root','root')
+      c = NB::DB::FiberedMysqlConnection.real_connect('localhost','root','home')
     end
 
     @done = 0

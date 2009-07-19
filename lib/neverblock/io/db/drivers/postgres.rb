@@ -1,5 +1,5 @@
-require File.expand_path(File.dirname(__FILE__)+'/pg')
-require File.expand_path(File.dirname(__FILE__)+'/../connection')
+require File.expand_path(File.dirname(__FILE__)+'/../lib/neverblock/io/db/drivers/postgres')
+require File.expand_path(File.dirname(__FILE__)+'/../lib/neverblock/io/db/connection')
 
 module NeverBlock
 
