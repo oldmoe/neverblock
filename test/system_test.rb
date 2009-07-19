@@ -5,9 +5,9 @@ MiniTest::Unit.autorun
 class SystemTest < MiniTest::Unit::TestCase
   def setup
     super
-    require '../lib/neverblock'
+    require '../lib/system'
+ 
   end
-
   def test_sleep
     run_in_reactor do
       t = Time.now
@@ -23,9 +23,11 @@ class SystemTest < MiniTest::Unit::TestCase
   end
 
   def test_system
-    assert system("ls")
-    refute system("ls whatisthat")
-    assert_nil system("ll")
+    NB::Fiber.new do
+      assert system("ls")
+      refute system("ls whatisthat")
+      assert_nil system("ll")
+    end.resume
   end
 
   def test_timed_out
@@ -71,10 +73,9 @@ class SystemTest < MiniTest::Unit::TestCase
 
   protected
 
-  def run_in_reactor
+  def run_in_reactor(&block)
     NB::Fiber.new do
-      yield
-      NB.reactor.stop
+      NB.reactor.add_timer(0.1){block.call; NB.reactor.stop}
     end.resume
     NB.reactor.run
   end
