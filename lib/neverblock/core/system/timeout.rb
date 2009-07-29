@@ -42,26 +42,29 @@ module Timeout
 end
 
 NB.reactor.on_add_timer do |timer|
-Kernel.puts "on add"
-  timeouts = NB::Fiber.current[:timeouts]
-  unless timeouts.nil? || timeouts.empty?
-    timeouts.last << timer
+  if (fiber = NB::Fiber.current).is_a? NB::Fiber
+    timeouts = fiber[:timeouts]
+    unless timeouts.nil? || timeouts.empty?
+      timeouts.last << timer
+    end
   end
 end
 
 NB.reactor.on_attach do |mode, io|
-   Kernel.puts "on attach"
-  timeouts = NB::Fiber.current[:timeouts]
-  unless timeouts.nil? || timeouts.empty?
-    timeouts.last << [mode, io]
+  if (fiber = NB::Fiber.current).is_a? NB::Fiber
+    timeouts = fiber[:timeouts]
+    unless timeouts.nil? || timeouts.empty?
+      timeouts.last << [mode, io]
+    end
   end
 end
 
 NB.reactor.on_detach do |mode, io|
-Kernel.puts "on detach"
-  timeouts = NB::Fiber.current[:timeouts]
-  unless timeouts.nil? || timeouts.empty?
-    timeouts.delete_if{|to|to.is_a? Array && to[0] == mode && to[1] == io}
+  if (fiber = NB::Fiber.current).is_a? NB::Fiber
+    timeouts = fiber[:timeouts]
+    unless timeouts.nil? || timeouts.empty?
+      timeouts.delete_if{|to|to.is_a? Array && to[0] == mode && to[1] == io}
+    end
   end
 end
 
