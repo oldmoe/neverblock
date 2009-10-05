@@ -1,21 +1,32 @@
 == NeverBlock
 Never, ever!
-
-NeverBlock is a collection of classes and modules that help you write evented non-blocking applications in a seemingly blocking mannner.
-
-NeverBlock currently provides the following Libraries:
-
+ 
+NeverBlock is a collection of classes and modules that help you write
+evented non-blocking applications in a seemingly blocking mannner.
+ 
+NeverBlock currently provides the following libraries.
+ 
 === FiberExtensions
-A set of extenstions to the standard Fiber implementation
-
-=== NeverBlock::Pool::FiberPool 
-A pool of fibers that can be used to provide an upper limit to the numbers of active fibers in an application
-
+ 
+A set of extenstions to the standard Fiber implementation.
+ 
+=== NeverBlock::Pool::FiberPool
+ 
+A pool of fibers that can be used to provide an upper
+limit to the numbers of active fibers in an application.
+ 
 === NeverBlock::Pool::FiberedConnectionPool
-A generic fibered connection pool for all sorts of connections with support for transactions. This was mostly copied from Sequel::ConnectionPool
-
-NeverBlock should be the basis for providing completely async Ruby application development that does not require the usual twisted style of evented programming. For example, you will be able to develop in Rails in the usual style and deploy to a NeverBlock server which will do all the IO in an evented manner without you even noticing this. 
-
+ 
+A generic fibered connection pool for all sorts of connections
+with support for transactions.  This was mostly copied from
+Sequel::ConnectionPool
+ 
+NeverBlock should be the basis for providing completely async Ruby
+application development that does not require the usual twisted style of
+evented programming.  For example, you will be able to develop in Rails
+in the usual style and deploy to a NeverBlock server which will do all
+the IO in an evented manner without you even noticing this.
+ 
 === License
-Ruby License, http://www.ruby-lang.org/en/LICENSE.txt.
-
+ 
+Ruby License, http://www.ruby-lang.org/en/LICENSE.txt
