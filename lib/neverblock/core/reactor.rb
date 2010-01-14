@@ -14,11 +14,14 @@ module NeverBlock
     @@thread_pool << Thread.new do
       loop do
         io, method, params, fiber, reactor = *(@@queue.shift)
-        begin
-          reactor.next_tick{fiber.resume(io.__send__(method, *params))} if fiber.alive? 
-        rescue Exception => e
-          reactor.next_tick{fiber.resume(e)} if fiber.alive?          
-        end
+				if fiber.alive?	
+					begin
+						result = io.__send__(method, *params)
+						reactor.next_tick{ fiber.resume(result) if fiber.alive? }					
+					rescue Exception => e
+						reactor.next_tick{ fiber.resume(e) if fiber.alive? }					
+					end
+				end
       end
     end
   end
